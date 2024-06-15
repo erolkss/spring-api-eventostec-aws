@@ -1,6 +1,8 @@
 package br.com.ero.eventostec.api.services;
 
+import br.com.ero.eventostec.api.domain.coupon.Coupon;
 import br.com.ero.eventostec.api.domain.event.Event;
+import br.com.ero.eventostec.api.domain.event.EventDetailsDTO;
 import br.com.ero.eventostec.api.domain.event.EventRequestDto;
 import br.com.ero.eventostec.api.domain.event.EventResponseDto;
 import br.com.ero.eventostec.api.repositories.EventRepository;
@@ -18,6 +20,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class EventService {
@@ -33,6 +36,9 @@ public class EventService {
 
     @Autowired
     private AddressService addressService;
+
+    @Autowired
+    private CouponService couponService;
 
     public Event createEvent(EventRequestDto data) {
         String imgUrl = null;
@@ -98,7 +104,8 @@ public class EventService {
     public List<EventResponseDto> getFilteredEvents(int page, int size, String title, String city, String uf, Date startDate, Date endDate) {
 
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(new Date());;
+        calendar.setTime(new Date());
+        ;
 
         title = (title != null) ? title : "";
         city = (city != null) ? city : "";
@@ -120,5 +127,29 @@ public class EventService {
                 event.getEventUrl(),
                 event.getImgUrl()
         )).stream().toList();
+    }
+
+    public EventDetailsDTO getEventDetails(UUID eventId) {
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not Found"));
+
+        List<Coupon> coupons = couponService.consultCoupons(eventId, new Date());
+
+        List<EventDetailsDTO.CouponDTO> couponDTOs = coupons.stream()
+                .map(coupon -> new EventDetailsDTO.CouponDTO(
+                        coupon.getCode(),
+                        coupon.getDiscount(),
+                        coupon.getValid()
+                )).collect(Collectors.toList());
+
+        return new EventDetailsDTO(
+                event.getId(),
+                event.getTitle(),
+                event.getDescription(),
+                event.getDate(),
+                event.getAddress() != null ? event.getAddress().getCity() : "",
+                event.getAddress() != null ? event.getAddress().getUf() : "",
+                event.getImgUrl(),
+                event.getEventUrl(),
+                couponDTOs);
     }
 }

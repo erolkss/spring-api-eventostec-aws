@@ -1,6 +1,7 @@
 package br.com.ero.eventostec.api.controller;
 
 import br.com.ero.eventostec.api.domain.event.Event;
+import br.com.ero.eventostec.api.domain.event.EventDetailsDTO;
 import br.com.ero.eventostec.api.domain.event.EventRequestDto;
 import br.com.ero.eventostec.api.domain.event.EventResponseDto;
 import br.com.ero.eventostec.api.services.EventService;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/event")
@@ -57,5 +59,11 @@ public class EventController {
     ) {
         List<EventResponseDto> events = eventService.getFilteredEvents(page, size, title, city, uf, startDate, endDate);
         return ResponseEntity.status(HttpStatus.OK).body(events);
+    }
+
+    @GetMapping("{eventId}")
+    public ResponseEntity<EventDetailsDTO> getEventDetails(@PathVariable UUID eventId) {
+        EventDetailsDTO eventDetailsDto = eventService.getEventDetails(eventId);
+        return ResponseEntity.status(HttpStatus.OK).body(eventDetailsDto);
     }
 }
